@@ -1,22 +1,72 @@
-Signal-Dashboard
-verbinde …
-Echte Live-Kurse von Binance (öffentlich, ohne Key). Die Signale sind eine einfache Demo-Strategie auf 10-Sekunden-Kerzen, keine Anlageberatung.
-0
-Signale
-0
-Offen
-–
-Trefferquote
-0,0R
-Ergebnis
-AGENTS
-SIGNALE
-Warte auf das erste Setup … (Aufwärmphase ca. 4 Minuten)
-AGENT-LOG
-
-PREISE
-Symbol
-Bid
-Ask
-24h %
-
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Signal-Dashboard Live</title>
+<style>
+:root{--bg:#000;--card:#111114;--ln:#222228;--tx:#f2f2f4;--mu:#8b8b95;--up:#3b82f6;--dn:#ef5b4a;--gn:#34c759;--or:#f5a524;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4f4f6;--card:#fff;--ln:#e0e0e6;--tx:#111;--mu:#6b6b75;--up:#1d5fd8;--dn:#d23b2b;--gn:#1f9a43;--or:#c27c00;color-scheme:light}}
+*{box-sizing:border-box}body{margin:0 auto;background:var(--bg);color:var(--tx);font:14px -apple-system,"Helvetica Neue",Arial,sans-serif;padding:0 12px 24px;max-width:760px}
+.warn{background:var(--card);border:1px solid var(--ln);color:var(--mu);border-radius:10px;padding:8px 12px;font-size:12px;margin:10px 0}
+h1{font-size:20px;margin:8px 0}h2{font-size:12px;letter-spacing:.08em;color:var(--mu);text-transform:uppercase;margin:18px 0 8px}
+.top{display:flex;justify-content:space-between;align-items:center}#cn{font-size:12px;color:var(--mu)}#cn:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mu);margin-right:6px}#cn.ok{color:var(--gn)}#cn.ok:before{background:var(--gn);animation:p 1.2s infinite}@keyframes p{50%{opacity:.25}}
+.st{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.st div{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:8px;text-align:center}.st b{display:block;font-size:18px}.st span{font-size:10px;color:var(--mu)}
+.ag{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.a{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:10px}.a b{display:block;font-size:13px}.a span{font-size:12px;color:var(--mu);display:block;margin-top:3px;min-height:30px}
+.sg{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px;margin-bottom:8px;border-left:4px solid var(--up)}.sg.S{border-left-color:var(--dn)}.sg.TP,.sg.SL{opacity:.75}.sg.TP{border-left-color:var(--gn)}
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.sh b{font-size:16px}.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--up);color:#fff}.S .tag{background:var(--dn)}
+.lv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}.lv div{background:var(--bg);border-radius:8px;padding:6px 2px}.lv span{display:block;font-size:10px;color:var(--mu)}.lv b{font-variant-numeric:tabular-nums;font-size:13px}.lv .sl b{color:var(--dn)}.lv .tp b{color:var(--gn)}
+.ft{display:flex;justify-content:space-between;font-size:11px;color:var(--mu);margin-top:8px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th{font-size:11px;color:var(--mu);font-weight:400;text-align:right;padding:4px}th:first-child,td:first-child{text-align:left}td{padding:7px 4px;text-align:right;border-top:1px solid var(--ln)}td:first-child{font-weight:700}tr.sc td{background:rgba(59,130,246,.15)}
+.u{color:var(--up)}.d{color:var(--dn)}.log{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:8px 10px;max-height:220px;overflow:auto;font:12px ui-monospace,Menlo,monospace}.log div{padding:2px 0;color:var(--mu)}.log b{color:var(--or)}.log time{color:var(--tx);margin-right:6px}
+</style></head><body>
+<div class="top"><h1>Signal-Dashboard</h1><span id="cn">verbinde …</span></div>
+<div class="warn">Echte Live-Kurse von Binance (öffentlich, ohne Key). Die Signale sind eine einfache Demo-Strategie auf 10-Sekunden-Kerzen, keine Anlageberatung.</div>
+<div class="st"><div><b id="n1">0</b><span>Signale</span></div><div><b id="n2">0</b><span>Offen</span></div><div><b id="n3">–</b><span>Trefferquote</span></div><div><b id="n4">0,0R</b><span>Ergebnis</span></div></div>
+<h2>Agents</h2><div class="ag" id="ag"></div>
+<h2>Signale</h2><div id="sg"><div class="a"><span>Warte auf das erste Setup … (Aufwärmphase ca. 4 Minuten)</span></div></div>
+<h2>Agent-Log</h2><div class="log" id="log"></div>
+<h2>Preise</h2><table><thead><tr><th>Symbol</th><th>Bid</th><th>Ask</th><th>24h %</th></tr></thead><tbody id="tb"></tbody></table>
+<script>
+const $=i=>document.getElementById(i);
+const SY=[['BTCUSD','btcusdt',2],['DOGEUSD','dogeusdt',5],['ETCUSD','etcusdt',3],['LNKUSD','linkusdt',3],['XRPUSD','xrpusdt',4],['BNBUSD','bnbusdt',2]].map(a=>({n:a[0],k:a[1],d:a[2],p:0,b:0,a:0,day:0,bars:[],cd:0}));
+const BY={};SY.forEach(s=>BY[s.k.toUpperCase()]=s);
+const AG={Scanner:['Scanner','Geht alle Symbole der Reihe nach durch'],Trend:['Trend-Agent','Prüft EMA 8/21 je Symbol'],Break:['Ausbruch-Agent','Sucht Ausbrüche aus 14-Kerzen-Range'],Risk:['Risiko-Agent','Setzt Entry, Stop Loss, Take Profit (2R)']};
+const state={};Object.keys(AG).forEach(k=>state[k]='bereit');
+const sigs=[];let idx=0,seq=0,host=0;
+const f=(s,v)=>v.toFixed(s.d);
+const ema=(a,n)=>{const k=2/(n+1);return a.reduce((e,x)=>e+k*(x-e),a[0])};
+const log=(ag,t)=>{const l=$('log'),d=document.createElement('div');d.innerHTML=`<time>${new Date().toLocaleTimeString('de-DE')}</time><b>${ag}</b> ${t}`;l.prepend(d);while(l.children.length>40)l.lastChild.remove()};
+function resolve(s){sigs.forEach(g=>{if(g.st!='offen'||g.s!==s)return;const L=g.dir=='L';
+ if(L?s.b>=g.tp:s.a<=g.tp){g.st='TP';g.r=2}else if(L?s.b<=g.sl:s.a>=g.sl){g.st='SL';g.r=-1}
+ if(g.st!='offen')log('Ausstieg',`${s.n} ${g.st=='TP'?'Take Profit erreicht (+2R)':'Stop Loss ausgelöst (−1R)'}`)})}
+function check(s){
+ const B=s.bars;if(B.length<22||s.cd>0||sigs.filter(x=>x.st=='offen').length>=8)return;
+ const e8=ema(B.slice(-30),8),e21=ema(B.slice(-30),21),w=B.slice(-15,-1),hi=Math.max(...w),lo=Math.min(...w),p=s.p;
+ state.Trend=`${s.n}: ${e8>e21?'aufwärts':'abwärts'}`;
+ let dir=null;if(p>hi&&e8>e21)dir='L';else if(p<lo&&e8<e21)dir='S';
+ if(!dir)return;
+ state.Break=`${s.n}: Ausbruch ${dir=='L'?'nach oben':'nach unten'}`;log('Ausbruch-Agent',`${s.n} bricht ${dir=='L'?'über '+f(s,hi):'unter '+f(s,lo)} aus`);
+ let a=0;for(let i=1;i<B.length;i++)a+=Math.abs(B[i]-B[i-1]);a=a/(B.length-1)*3;
+ const r=Math.max(a*1.5,p*5e-4),en=dir=='L'?s.a:s.b,sl=dir=='L'?en-r:en+r,tp=dir=='L'?en+2*r:en-2*r;
+ sigs.unshift({s,dir,en,sl,tp,t:new Date(),ag:'Ausbruch + Trend',conf:Math.min(95,Math.round(55+Math.abs(e8-e21)/r*40)),st:'offen',r:0});
+ s.cd=12;state.Risk=`${s.n}: SL ${f(s,sl)} · TP ${f(s,tp)}`;
+ log('Risiko-Agent',`${s.n} ${dir=='L'?'LONG':'SHORT'} Entry ${f(s,en)} · SL ${f(s,sl)} · TP ${f(s,tp)} (2R)`);
+ if(navigator.vibrate)navigator.vibrate(80);
+}
+function connect(){
+ const H=['wss://stream.binance.com:9443/stream?streams=','wss://data-stream.binance.vision/stream?streams='];
+ let ws;try{ws=new WebSocket(H[host%2]+SY.map(s=>s.k+'@ticker').join('/'))}catch(e){return setTimeout(connect,3000)}
+ ws.onopen=()=>{$('cn').textContent='Live · Binance';$('cn').className='ok';log('System','Verbunden, Kurse laufen')};
+ ws.onmessage=e=>{const d=JSON.parse(e.data).data,s=d&&BY[d.s];if(!s)return;s.b=+d.b;s.a=+d.a;s.p=(s.b+s.a)/2;s.day=+d.P;resolve(s)};
+ ws.onclose=ws.onerror=()=>{$('cn').textContent='getrennt – neuer Versuch …';$('cn').className='';ws.onclose=ws.onerror=null;host++;setTimeout(connect,3000)};
+}
+setInterval(()=>SY.forEach(s=>{if(!s.p)return;s.bars.push(s.p);if(s.bars.length>60)s.bars.shift();s.cd=Math.max(0,s.cd-1);check(s)}),10000);
+setInterval(()=>{idx=(idx+1)%SY.length;const s=SY[idx];state.Scanner=`Scanne ${s.n} (${idx+1}/${SY.length})`;if(s.bars.length<22)state.Trend=`Aufwärmphase ${s.n}: ${s.bars.length}/22 Kerzen`},350);
+function render(){
+ $('tb').innerHTML=SY.map((s,i)=>`<tr class="${i==idx?'sc':''}"><td>${s.n}</td><td class="${s.day>=0?'u':'d'}">${s.p?f(s,s.b):'–'}</td><td class="d">${s.p?f(s,s.a):'–'}</td><td class="${s.day>=0?'u':'d'}">${s.p?s.day.toFixed(2)+'%':'–'}</td></tr>`).join('');
+ const done=sigs.filter(x=>x.st!='offen'),w=done.filter(x=>x.st=='TP').length,R=done.reduce((a,x)=>a+x.r,0);
+ $('n1').textContent=sigs.length;$('n2').textContent=sigs.length-done.length;$('n3').textContent=done.length?Math.round(w/done.length*100)+'%':'–';$('n4').textContent=(R>=0?'+':'')+R.toFixed(1).replace('.',',')+'R';
+ if(sigs.length)$('sg').innerHTML=sigs.slice(0,12).map(g=>{const s=g.s,L=g.dir=='L';return`<div class="sg ${L?'':'S'} ${g.st=='offen'?'':g.st}"><div class="sh"><b>${s.n}</b><span class="tag">${L?'LONG':'SHORT'}</span></div><div class="lv"><div><span>Entry</span><b>${f(s,g.en)}</b></div><div class="sl"><span>Stop Loss</span><b>${f(s,g.sl)}</b></div><div class="tp"><span>Take Profit</span><b>${f(s,g.tp)}</b></div></div><div class="ft"><span>${g.ag} · ${g.conf}% · ${g.t.toLocaleTimeString('de-DE')}</span><span>${g.st=='offen'?'läuft':g.st=='TP'?'✓ TP +2R':'✗ SL −1R'}</span></div></div>`}).join('');
+ $('ag').innerHTML=Object.keys(AG).map(k=>`<div class="a"><b>${AG[k][0]}</b><span>${state[k]=='bereit'?AG[k][1]:state[k]}</span></div>`).join('');
+}
+setInterval(render,500);render();connect();
+</script></body></html>
